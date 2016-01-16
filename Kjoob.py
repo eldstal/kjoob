@@ -15,11 +15,13 @@ from master import LocalMaster
 from slave import LocalSlave
 
 def setup_screen(conf):
-  pygame.init()
 
   # Set up our game window
   # Pygame doesn't set window position programmatically. We have to hack it via an SDL environment variable. Wow.
+  # This doesn't actually seem to work.
   os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (conf.xpos, conf.ypos)
+
+  pygame.init()
 
   flags = 0
   if (conf.fullscreen):

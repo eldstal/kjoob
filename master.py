@@ -1,6 +1,6 @@
 import pygame
 
-from menu import Menu
+from menu import *
 
 class Master:
   """
@@ -11,11 +11,12 @@ class Master:
 
   def slave_register(self, slave):
     """ Called by new slaves to receive an ID """
-    pass
 
   def slave_set_role(self, slave, role):
     """ Called by slaves to set their role (screen direction) """
-    pass
+
+  def slave_message(self, slave, msg):
+    """ Called when a message arrives from a slave """
 
 
 class RemoteMaster(Master):
@@ -26,15 +27,23 @@ class RemoteMaster(Master):
   """
   def __init__(self, hostname, port):
     super.__init__()
+    self.slave = None
     pass
+
+  # TODO: receive messages and pass them to self.slave.master_message()
 
   def slave_register(self, slave):
     # TODO: Send message
     # TODO: Return a unique identity
+    self.slave = slave
     return -2
 
   def slave_set_role(self, slave):
     # TODO: Send message
+    pass
+
+  def slave_message(self, slave, msg):
+    # TODO: parse the message and send it over the net
     pass
 
 
@@ -48,7 +57,7 @@ class LocalMaster(Master):
     print("Local Master initialized")
     self.slaves = []
     self.next_identity = 0
-    self.menu = Menu(self)
+    self.menu = MenuMaster(self)
     self.running_app = self.menu
 
   def shutdown(self):
@@ -69,6 +78,11 @@ class LocalMaster(Master):
     for s in self.slaves:
       s.master_goto_menu()
 
+  def send_message(self, msg):
+    """ Callback from apps. Send a message to all slaves """
+    for s in self.slaves:
+      s.master_message(msg)
+
   def slave_register(self, slave):
     self.next_identity += 1
     self.slaves.append(slave)
@@ -84,9 +98,9 @@ class LocalMaster(Master):
     for ev in pygame.event.get():
       if (ev.type == pygame.QUIT):
         self.shutdown()
-      self.running_app.master_event(ev)
+      self.running_app.event(ev)
 
-    terminate = not self.running_app.master_run()
+    terminate = not self.running_app.run()
     if (terminate):
       if (self.running_app == self.menu):
         shutdown()
