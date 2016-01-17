@@ -11,6 +11,11 @@ import os
 import argparse
 import pygame
 
+# Import and register all the apps in a static order, ensuring that the app_id
+# is the same both master and slave-side.
+import menu
+import dummy
+
 from master import LocalMaster
 from slave import LocalSlave
 

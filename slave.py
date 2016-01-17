@@ -18,9 +18,9 @@ class Slave:
     """ Called by the master to show the menu. Any running app is shut down. """
     print("Dummy slave goto_menu")
 
-  def master_start_app(self, appname):
+  def master_start_app(self, app_id):
     """ Called by the master to start an application and pass control to it """
-    print("Dummy slave start_app %s" % appname)
+    print("Dummy slave start_app %d" % app_id)
 
   def master_shutdown(self):
     """ Called by the master to stop the running app and shut down """
@@ -68,7 +68,6 @@ class LocalSlave(Slave):
     self.menu = MenuSlave(self)
 
     self.set_master(master)
-    self.master.slave_set_role(self, role)
     print("Local slave started with ID %d" % self.identity)
 
   def launch_app(self, app):
@@ -79,12 +78,12 @@ class LocalSlave(Slave):
   def master_goto_menu(self):
     print("Client returning to menu")
     if (self.running_app is not None):
-      self.running_app.stop()
+      self.running_app.shutdown()
 
   def master_start_app(self, app_id):
-    print("Client starting app %s" % app_id)
-    appclass = App.get_slave_app(app_id)
-    self.running_app = appclass(self)
+    print("Client starting app %d" % app_id)
+    app = App.get_slave_app(app_id)
+    self.running_app = app(self)
 
   def master_shutdown(self):
     print("Client shutting down...")
@@ -98,6 +97,10 @@ class LocalSlave(Slave):
     elif (appid == self.menu.app_id or appid == 0):
         self.menu.message(msg)
     pass
+
+  def send_message(self, msg):
+    """ Send message to the master """
+    self.master.slave_message(self, msg)
 
   def run(self, screen):
     """ Non-blocking, run one iteration of whatever you're doing. Return False if stopped, True if running """

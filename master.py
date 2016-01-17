@@ -12,9 +12,6 @@ class Master:
   def slave_register(self, slave):
     """ Called by new slaves to receive an ID """
 
-  def slave_set_role(self, slave, role):
-    """ Called by slaves to set their role (screen direction) """
-
   def slave_message(self, slave, msg):
     """ Called when a message arrives from a slave """
 
@@ -38,10 +35,6 @@ class RemoteMaster(Master):
     self.slave = slave
     return -2
 
-  def slave_set_role(self, slave):
-    # TODO: Send message
-    pass
-
   def slave_message(self, slave, msg):
     # TODO: parse the message and send it over the net
     pass
@@ -64,13 +57,19 @@ class LocalMaster(Master):
     for s in self.slaves:
       s.master_shutdown()
 
-  def launch_app(self, app):
+  def launch_app(self, app_id):
     """ Called when the menu app has selected an app to start. Will also be called on slaves automatically. """
+    app = App.get_master_app(app_id)
+
+    if (app is None):
+      print("Master failed to find appid %d." % app_id)
+      return
+
     print("Master launching app: %s " % app)
-    if (app is not None):
-      self.running_app = app
-    else:
-      self.running_app = self.menu
+    for s in self.slaves:
+      s.master_start_app(app_id)
+
+    self.running_app = app(self)
 
   def goto_menu(self):
     """ Command all slaves to start or return to the main menu """
@@ -89,9 +88,6 @@ class LocalMaster(Master):
     print("Slave registered with ID %d" % self.next_identity)
     return self.next_identity
 
-  def slave_set_role(self, slave, role):
-    slave.role = role
-
   def run(self):
 
     # Handle local events, such as user input. Master is the only one to see these.
@@ -105,4 +101,4 @@ class LocalMaster(Master):
       if (self.running_app == self.menu):
         shutdown()
       else:
-        self.running_app = self.menu
+        self.goto_menu()

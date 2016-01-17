@@ -6,13 +6,17 @@ import pygame
 
 class MenuMaster(MasterApp):
 
-  options = [ "First", "Second", "Third" ]
+  options = {}    # app_id -> app metadata
 
   def __init__(self, owner):
-    """ owner is an object with a launch_app(app) method, called when an app is selected in the menu """
+    super().__init__(owner)
     self.selected = 0
     self.dirty = True
-    super().__init__(owner)
+    self.options = App.get_all_apps()
+
+    # Remove the menu from the menu
+    self.options = list(filter(lambda x: x["app_id"] != self.app_id, self.options ))
+
 
   def sel_vert(self, diff):
     self.selected += diff
@@ -24,6 +28,7 @@ class MenuMaster(MasterApp):
     if (not self.dirty): return
     self.dirty = False
     self.send_message({'app':self.app_id, 'msg':0, 'data':self.options})
+    self.send_message({'app':self.app_id, 'msg':1, 'data':self.selected})
 
   def event(self, ev):
     if ev.type == pygame.KEYDOWN:
@@ -31,6 +36,8 @@ class MenuMaster(MasterApp):
         self.sel_vert(-1)
       if (ev.key == pygame.K_DOWN):
         self.sel_vert(+1)
+      if (ev.key == pygame.K_RETURN):
+        self.owner.launch_app(self.options[self.selected]['app_id'])
     return None
 
   def run(self):
@@ -45,12 +52,11 @@ class MenuSlave(SlaveApp):
   backcolor = (40, 40, 40)
 
   def __init__(self, owner):
-    """ owner is an object with a launch_app(appobj) method, called when an app is selected in the menu """
+    super().__init__(owner)
     self.selected = 0
     self.options = []
     self.selected_font = pygame.font.SysFont("sans", 24)
     self.unselected_font = pygame.font.SysFont("sans", 16)
-    super().__init__(owner)
 
   def message(self, msg):
     if (msg['msg'] == 0):   # List of selectable things
@@ -68,22 +74,26 @@ class MenuSlave(SlaveApp):
 
   def run(self, screen):
     screen.fill(self.backcolor)
+
     # The selected thing is at the center
     # text is centered
-    for i in range(len(self.options)):
+    i = 0
+    for entry in self.options:
       slot = i - self.selected
       tone = color.blend(self.backcolor, self.textcolor, self.fade * abs(slot))
 
       if (slot == 0): font = self.selected_font
       else: font = self.unselected_font
 
-      text = "%d. %s" % (i, self.options[i])
+      text = "%d. %s" % (i, entry["name"])
       label = font.render(text, True, tone)
 
       (x, y) = self.centering(label, screen)
       lineheight = font.get_height() + 4
       screen.blit(label, (x, y + lineheight * slot))
+
+      i += 1
     return not self.stop
 
 
-App.register_app(MenuMaster, MenuSlave)
+App.register_app(MenuMaster, MenuSlave, name="Menu")
