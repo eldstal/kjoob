@@ -15,6 +15,7 @@ import pygame
 # is the same both master and slave-side.
 import menu
 import dummy
+import tivoli
 
 from master import LocalMaster
 from slave import LocalSlave

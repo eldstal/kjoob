@@ -22,7 +22,7 @@ class DummySlave(SlaveApp):
 
   def __init__(self, owner):
     super().__init__(owner)
-    self.font = pygame.font.SysFont("sans", 36)
+    self.font = pygame.font.SysFont("sans", 16)
     self.label1 = self.font.render("Dummy app", True, (0xec, 0xbc, 0xbc))
     self.label2 = self.font.render("Press Q to return to menu", True, (0xec, 0xbc, 0xbc))
 

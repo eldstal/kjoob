@@ -80,17 +80,16 @@ class MenuSlave(SlaveApp):
     i = 0
     for entry in self.options:
       slot = i - self.selected
-      tone = color.blend(self.backcolor, self.textcolor, self.fade * abs(slot))
+      tone = color.blend(self.textcolor, self.backcolor, self.fade * abs(slot))
 
       if (slot == 0): font = self.selected_font
       else: font = self.unselected_font
 
-      text = "%d. %s" % (i, entry["name"])
-      label = font.render(text, True, tone)
+      label = font.render(entry["name"], True, tone)
 
       (x, y) = self.centering(label, screen)
       lineheight = font.get_height() + 4
-      screen.blit(label, (x, y + lineheight * slot))
+      screen.blit(label, (4, y + lineheight * slot))
 
       i += 1
     return not self.stop
