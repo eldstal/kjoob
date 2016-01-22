@@ -1,4 +1,6 @@
 import math
+import itertools
+import random
 
 from app import *
 
@@ -31,13 +33,18 @@ class TivoliSlave(SlaveApp):
 
     # A terrible, animating background
     self.bspeed = 1200
-    self.bcolors = color.RAINBOW
-    self.bdest = 1
-    self.bblender = animation.Interpolate(self.bcolors[0], self.bcolors[1], self.bspeed)
+    self.bcolors = itertools.cycle([ color.darken(c, 0.5) for c in color.RAINBOW])
+    self.bblender = animation.Interpolate(next(self.bcolors), next(self.bcolors), self.bspeed)
 
     # Some text scrolling across the screen
-    self.message_text = "The kjoob is alive with the sound of silence!"
-    self.tpos = None
+    self.messages = itertools.cycle([
+                      "The kjoob is alive with the sound of silence!",
+                      "There isn't much else to show, really.",
+                      "But let's do it anyway!"
+                      ])
+    self.message_text = next(self.messages)
+    self.txpos = None
+    self.txpos = None
     self.tcolor = (255, 255, 255)
     self.tperiod = 9000
 
@@ -58,26 +65,28 @@ class TivoliSlave(SlaveApp):
     bcolor = self.bblender.get()
     if (self.bblender.done()):
       # Pick a new destination color
-      self.bdest = (self.bdest + 1) % len(self.bcolors)
-      self.bblender = animation.Interpolate(bcolor, self.bcolors[self.bdest], self.bspeed)
+      self.bblender = animation.Interpolate(bcolor, next(self.bcolors), self.bspeed)
     screen.fill(bcolor)
 
     # The scrolling text
     (w, h) = screen.get_size()
-    if (self.tpos is None):
+    if (self.txpos is None):
       # Initialize these values, now that we know the size of the window
-      self.tpos = animation.Interpolate(w, -self.textwidth, self.tperiod)
+      self.txpos = animation.Interpolate(w, -self.textwidth, self.tperiod)
+      self.typos = h / 2
       self.tmagn = h / 6    # Sine wave magnitude
       self.tfreq = w / 2    # Sine wave frequency
 
-    if (self.tpos.done()):
-      self.tpos.restart()
+    if (self.txpos.done()):
+      self.message_text = next(self.messages)
+      self.typos = (h / 2) * (0.5 + random.random())
+      self.txpos.restart()
 
-    xpos = self.tpos.get()
+    xpos = self.txpos.get()
     for c in self.message_text:
-      ypos = self.tmagn * math.sin(xpos * 2 * math.pi/ self.tfreq)
+      yoff = self.tmagn * math.sin(xpos * 2 * math.pi/ self.tfreq)
       label = self.font.render(c, True, self.tcolor)
-      screen.blit(label, (xpos, (screen.get_height() / 2) + ypos))
+      screen.blit(label, (xpos, self.typos + yoff))
       xpos += label.get_width()
 
     return not self.stop

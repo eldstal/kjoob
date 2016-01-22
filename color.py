@@ -21,3 +21,11 @@ def blend(a, b, b_factor):
     # not iterable (just an integer)
     return a * (1-b_factor) + b* b_factor
   return out
+
+
+def darken(a, factor):
+  return blend(a, (0,0,0), factor)
+
+def brighten(a, factor):
+  return blend(a, (255,255,255), factor)
+
