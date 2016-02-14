@@ -25,7 +25,6 @@ class MenuMaster(MasterApp):
     self.send_message({'app':self.app_id, 'msg':1, 'data':self.selected})
 
   def push_state(self):
-    if (not self.dirty): return
     self.dirty = False
     self.send_message({'app':self.app_id, 'msg':0, 'data':self.options})
     self.send_message({'app':self.app_id, 'msg':1, 'data':self.selected})
@@ -41,7 +40,8 @@ class MenuMaster(MasterApp):
     return None
 
   def run(self):
-    self.push_state()
+    if (self.dirty):
+      self.push_state()
     return not self.stop
 
 

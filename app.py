@@ -91,6 +91,10 @@ class MasterApp(App):
   def __init__(self, owner):
     super().__init__(owner)
 
+  def push_state(self):
+    """ Send messages to all clients, refreshing the entire state """
+    print("BUG: %s does not implement push_state" % self.__class__)
+
   def run(self):
     """ Non-blocking main-loop kernel of the master-side application. Return True to keep running or False to terminate """
     return not self.stop

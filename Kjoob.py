@@ -17,6 +17,7 @@ import menu
 import dummy
 import tivoli
 
+from net import GameServer, GameClient
 from master import LocalMaster
 from slave import LocalSlave
 
@@ -35,7 +36,25 @@ def setup_screen(conf):
 
   screen = pygame.display.set_mode((conf.width, conf.height), flags)
 
+  if (conf.master):
+    pygame.display.set_caption("Master %s" % conf.role)
+  else:
+    pygame.display.set_caption("Slave %s" % conf.role)
+
   return screen
+
+# Given a hostname:port string, split into hostname, port and return a tuple
+def parse_host(pair):
+  tokens = pair.split(":")
+  if (len(tokens) == 1):
+    return (tokens[0], 5678)    # Default port number
+
+  if (len(tokens) == 2):
+    port = int(tokens[1])
+    if (port is None): raise ValueError("Invalid port number.")
+    return (tokens[0], port)
+
+  raise ValueError("Invalid Master host %s" % pair)
 
 def main():
   parser = argparse.ArgumentParser(description="The Kjoob UI/Games for a single screen. Default is a game master on port 5678 displaying North.")
@@ -77,16 +96,18 @@ def main():
   screen = setup_screen(conf)
 
   if (conf.master):
-    master = LocalMaster(conf.master)
-    slave = LocalSlave(conf.role, master, conf)
+    master = LocalMaster()
+    slave = LocalSlave(conf.role, conf)
+    slave.set_master(master)
 
-    master.goto_menu()
-
-    while slave.run(screen):
-      master.run()
+    server = GameServer(master, slave, screen, conf.master)
+    server.start()
 
   if (conf.slave):
-    # TODO: Connect to a remote master, then pass that to a LocalSlave
+    hostname,port = parse_host(conf.slave)
+    slave = LocalSlave(conf.role, conf)
+    client = GameClient(hostname, port, slave, screen)
+    client.start()
     pass
 
 if __name__ == '__main__':
